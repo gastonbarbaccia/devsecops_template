@@ -5,7 +5,6 @@ on:
 
 jobs:
   mobsfscan:
-    name: Analyze APK with MobSFScan
     runs-on: ubuntu-latest
 
     steps:
@@ -22,13 +21,13 @@ jobs:
           pip install --upgrade pip
           pip install mobsfscan
 
-      - name: Run MobSFScan on APK
+      - name: Run MobSFScan
         run: |
           mkdir -p reports
-          mobsfscan apk/app.apk \
-            --json reports/mobsf-report.json \
-            --html reports/mobsf-report.html \
-            --exit-on high
+          mobsfscan dvba.apk \
+            --json \
+            --html \
+            -o reports
 
       - name: Upload report
         uses: actions/upload-artifact@v4
