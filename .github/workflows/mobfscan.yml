@@ -1,0 +1,54 @@
+name: Mobile Security Scan (MobSF Docker)
+
+on:
+  workflow_call:
+
+jobs:
+  mobsf:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start MobSF
+        run: |
+          docker run -d -p 8000:8000 --name mobsf opensecurity/mobile-security-framework-mobsf
+
+      - name: Wait for MobSF to be ready
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:8000/api/v1/health | grep -q "ok"; then
+              echo "MobSF ready"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "MobSF did not start in time"
+          exit 1
+
+      - name: Upload APK
+        run: |
+          curl -X POST http://localhost:8000/api/v1/upload \
+            -H "Authorization: mobsf" \
+            -F "file=@apk/app.apk" > upload.json
+
+      - name: Scan APK
+        run: |
+          HASH=$(jq -r '.hash' upload.json)
+          curl -X POST http://localhost:8000/api/v1/scan \
+            -H "Authorization: mobsf" \
+            -H "Content-Type: application/json" \
+            -d "{\"hash\": \"$HASH\"}"
+
+      - name: Download report
+        run: |
+          curl -X POST http://localhost:8000/api/v1/report_json \
+            -H "Authorization: mobsf" \
+            -H "Content-Type: application/json" \
+            -d "{\"hash\": \"$HASH\"}" > mobsf-report.json
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobsf-report
+          path: mobsf-report.json
