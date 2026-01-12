@@ -18,19 +18,12 @@ jobs:
 
       - name: Install MobSFScan
         run: |
-          pip install --upgrade pip
-          pip install mobsfscan
+          pip install --upgrade mobsfscan
 
       - name: Run MobSFScan
         run: |
-            set -x
-            mkdir -p reports
-            mobsfscan dvba.apk --json --html
-            echo "Archivos generados:"
-            ls -l
-            mv mobsfscan.* reports/ || true
-            echo "Contenido de reports:"
-            ls -l reports
+          mkdir -p reports
+          mobsfscan app.apk --json --output reports/results_mobile.json
 
       - name: Upload report
         uses: actions/upload-artifact@v4
